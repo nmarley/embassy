@@ -1,8 +1,12 @@
+//! [`embassy-net`](crates.io/crates/embassy-net) driver for the WIZnet W5500 ethernet chip.
 #![no_std]
-/// [`embassy-net`](crates.io/crates/embassy-net) driver for the WIZnet W5500 ethernet chip.
-mod device;
-mod socket;
-mod spi;
+
+// must go first!
+mod fmt;
+
+pub mod device;
+pub mod socket;
+pub mod spi;
 
 use embassy_futures::select::{select, Either};
 use embassy_net_driver_channel as ch;
@@ -91,7 +95,7 @@ pub async fn new<'a, const N_RX: usize, const N_TX: usize, SPI: SpiDevice, INT: 
     Timer::after(Duration::from_millis(1)).await;
     reset.set_high().ok();
     // Wait for the W5500 to achieve PLL lock.
-    Timer::after(Duration::from_millis(2)).await;
+    Timer::after(Duration::from_millis(100)).await;
 
     let mac = W5500::new(spi_dev, mac_addr).await.unwrap();
 
