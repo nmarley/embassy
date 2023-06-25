@@ -70,20 +70,26 @@ async fn main(spawner: Spawner) {
                 Err(_e) => "n/a",
             };
             // rprintln!("scanned {} == {:x}", ssid_str, bss.bssid);
-            rprintln!("scanned {} == {}", ssid_str, s1);
+            rprintln!("SSID: [{}], BSSID: [{}]", ssid_str, s1);
         }
     }
+
+    rprintln!("Goodbye, world!");
 }
+
+const HEX_DIGITS: [char; 16] = [
+    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f',
+];
 
 async fn bssid_to_lowerhex(input: &[u8; 6]) -> [u8; 12] {
     let mut result: [u8; 12] = [0; 12];
 
     let mut count = 0;
     for digit in input {
-        result[count] = digit / 16;
+        result[count] = HEX_DIGITS[(digit / 16) as usize] as u8;
         count += 1;
 
-        result[count] = digit % 16;
+        result[count] = HEX_DIGITS[(digit % 16) as usize] as u8;
         count += 1;
     }
 
