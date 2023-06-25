@@ -7,14 +7,16 @@
 use core::str;
 
 use cyw43_pio::PioSpi;
-use defmt::*;
+// use defmt::*;
 use embassy_executor::Spawner;
 use embassy_net::Stack;
 use embassy_rp::gpio::{Level, Output};
 use embassy_rp::peripherals::{DMA_CH0, PIN_23, PIN_25, PIO0};
 use embassy_rp::pio::Pio;
+// use {defmt_rtt as _, panic_probe as _};
+use panic_rtt_target as _;
+use rtt_target::{rprintln, rtt_init_print};
 use static_cell::make_static;
-use {defmt_rtt as _, panic_probe as _};
 
 #[embassy_executor::task]
 async fn wifi_task(
@@ -30,7 +32,8 @@ async fn net_task(stack: &'static Stack<cyw43::NetDriver<'static>>) -> ! {
 
 #[embassy_executor::main]
 async fn main(spawner: Spawner) {
-    info!("Hello World!");
+    rtt_init_print!();
+    rprintln!("Hello World!");
 
     let p = embassy_rp::init(Default::default());
 
@@ -51,7 +54,7 @@ async fn main(spawner: Spawner) {
 
     let state = make_static!(cyw43::State::new());
     let (_net_device, mut control, runner) = cyw43::new(state, pwr, spi, fw).await;
-    unwrap!(spawner.spawn(wifi_task(runner)));
+    spawner.spawn(wifi_task(runner)).unwrap();
 
     control.init(clm).await;
     control
@@ -61,7 +64,29 @@ async fn main(spawner: Spawner) {
     let mut scanner = control.scan().await;
     while let Some(bss) = scanner.next().await {
         if let Ok(ssid_str) = str::from_utf8(&bss.ssid) {
-            info!("scanned {} == {:x}", ssid_str, bss.bssid);
+            let hex_bssid = bssid_to_lowerhex(&bss.bssid).await;
+            let s1 = match str::from_utf8(&hex_bssid) {
+                Ok(val) => val,
+                Err(_e) => "n/a",
+            };
+            // rprintln!("scanned {} == {:x}", ssid_str, bss.bssid);
+            rprintln!("scanned {} == {}", ssid_str, s1);
         }
     }
+}
+
+async fn bssid_to_lowerhex(input: &[u8; 6]) -> [u8; 12] {
+    let mut result: [u8; 12] = [0; 12];
+
+    let mut count = 0;
+    for digit in input {
+        result[count] = digit / 16;
+        count += 1;
+
+        result[count] = digit % 16;
+        count += 1;
+    }
+
+    // str::from_utf8
+    result
 }

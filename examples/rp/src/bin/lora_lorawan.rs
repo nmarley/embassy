@@ -1,5 +1,6 @@
-//! This example runs on the Raspberry Pi Pico with a Waveshare board containing a Semtech Sx1262 radio.
-//! It demonstrates LoRaWAN join functionality.
+//! This example runs on the Raspberry Pi Pico with a Waveshare board
+//! containing a Semtech Sx1262 radio. It demonstrates LoRaWAN join
+//! functionality.
 #![no_std]
 #![no_main]
 #![macro_use]
@@ -20,7 +21,8 @@ use lorawan_device::async_device::lora_radio::LoRaRadio;
 use lorawan_device::async_device::{region, Device, JoinMode};
 use {defmt_rtt as _, panic_probe as _};
 
-const LORAWAN_REGION: region::Region = region::Region::EU868; // warning: set this appropriately for the region
+// warning: set this appropriately for the region
+const LORAWAN_REGION: region::Region = region::Region::EU868;
 
 #[embassy_executor::main]
 async fn main(_spawner: Spawner) {
