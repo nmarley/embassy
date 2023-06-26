@@ -7,13 +7,12 @@
 use core::str;
 
 use cyw43_pio::PioSpi;
-// use defmt::*;
 use embassy_executor::Spawner;
 use embassy_net::Stack;
 use embassy_rp::gpio::{Level, Output};
 use embassy_rp::peripherals::{DMA_CH0, PIN_23, PIN_25, PIO0};
 use embassy_rp::pio::Pio;
-// use {defmt_rtt as _, panic_probe as _};
+use embassy_rp::uart;
 use panic_rtt_target as _;
 use rtt_target::{rprintln, rtt_init_print};
 use static_cell::make_static;
@@ -61,6 +60,11 @@ async fn main(spawner: Spawner) {
         .set_power_management(cyw43::PowerManagementMode::PowerSave)
         .await;
 
+    let config = uart::Config::default();
+    let mut uart = uart::Uart::new_with_rtscts_blocking(p.UART0, p.PIN_0, p.PIN_1, p.PIN_3, p.PIN_2, config);
+    uart.blocking_write("Initializing WiFi scanning:\r\n".as_bytes())
+        .unwrap();
+
     let mut scanner = control.scan().await;
     while let Some(bss) = scanner.next().await {
         if let Ok(ssid_str) = str::from_utf8(&bss.ssid) {
@@ -71,8 +75,19 @@ async fn main(spawner: Spawner) {
             };
             // rprintln!("scanned {} == {:x}", ssid_str, bss.bssid);
             rprintln!("SSID: [{}], BSSID: [{}]", ssid_str, s1);
+
+            uart.blocking_write("SSID: [".as_bytes()).unwrap();
+            uart.blocking_write(ssid_str.as_bytes()).unwrap();
+            uart.blocking_write("], BSSID: [".as_bytes()).unwrap();
+            uart.blocking_write(s1.as_bytes()).unwrap();
+            uart.blocking_write("]\r\n".as_bytes()).unwrap();
         }
     }
+
+    // loop {
+    //    uart.blocking_write("hello there!\r\n".as_bytes()).unwrap();
+    //    cortex_m::asm::delay(128_000_000);
+    // }
 
     rprintln!("Goodbye, world!");
 }
