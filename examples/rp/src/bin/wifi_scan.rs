@@ -74,16 +74,16 @@ async fn main(spawner: Spawner) {
                 Err(_e) => "n/a",
             };
             // rprintln!("scanned {} == {:x}", ssid_str, bss.bssid);
-            rprintln!("SSID: [{}] (len={}), BSSID: [{}]", ssid_str, bss.ssid_len, s1);
+            rprintln!("BSSID: [{}], SSID: [{}] (len={})", s1, ssid_str, bss.ssid_len);
 
-            uart.blocking_write("SSID: [".as_bytes()).unwrap();
+            uart.blocking_write("BSSID: [".as_bytes()).unwrap();
+            uart.blocking_write(s1.as_bytes()).unwrap();
+            uart.blocking_write("], SSID: [".as_bytes()).unwrap();
             if bss.ssid_len == 0 {
                 uart.blocking_write("<hidden>".as_bytes()).unwrap();
             } else {
                 uart.blocking_write(ssid_str.as_bytes()).unwrap();
             }
-            uart.blocking_write("], BSSID: [".as_bytes()).unwrap();
-            uart.blocking_write(s1.as_bytes()).unwrap();
             uart.blocking_write("]\r\n".as_bytes()).unwrap();
         }
     }
@@ -92,6 +92,8 @@ async fn main(spawner: Spawner) {
     //    uart.blocking_write("hello there!\r\n".as_bytes()).unwrap();
     //    cortex_m::asm::delay(128_000_000);
     // }
+
+    uart.blocking_write("Finished WiFi scanning:\r\n".as_bytes()).unwrap();
 
     rprintln!("Goodbye, world!");
 }
